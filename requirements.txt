@@ -1,0 +1,269 @@
+AI-Based Priority Study Planner — Requirements
+===============================================
+
+PROJECT OVERVIEW
+----------------
+A full-stack web application that helps students organise their academic semester
+by managing subjects and topics, with AI-powered study plan generation planned
+for a future phase.
+
+
+TECH STACK
+----------
+Frontend   : React 19, React Router v7, Vite 8
+Backend    : Node.js 22, Express 5
+Database   : MongoDB (Mongoose 9)
+Auth       : JWT (jsonwebtoken), bcryptjs
+Validation : express-validator (backend), custom hooks (frontend)
+Linting    : oxlint (frontend)
+Testing    : Node built-in test runner + Jest + supertest (backend)
+
+
+IMPLEMENTED FEATURES
+--------------------
+
+FEAT-1 — Student Registration
+Status: Complete
+
+Description:
+  A new student creates an account with their name, email, and password.
+
+Acceptance Criteria:
+  - Student provides name (2-100 chars), email (valid format, max 255 chars),
+    and password.
+  - Password must be 8-128 characters and contain at least one uppercase letter,
+    one lowercase letter, one digit, and one special character.
+  - Duplicate email registrations are rejected with a clear error message.
+  - Password is hashed with bcrypt (cost factor 12) before storage; it is never
+    returned in any API response.
+  - On success the API returns HTTP 201 with the student object
+    (no token — login is a separate step).
+  - Frontend displays inline field-level validation errors on blur and on submit.
+  - A live password strength indicator shows which requirements are met as the
+    user types.
+  - On success the frontend shows a confirmation screen.
+
+API: POST /api/students/register
+
+---
+
+FEAT-2 — Student Login
+Status: Complete
+
+Description:
+  A registered student authenticates and receives a JWT to access protected routes.
+
+Acceptance Criteria:
+  - Student provides email and password.
+  - Invalid email or wrong password returns HTTP 401 with a generic message
+    (no enumeration of which field is wrong).
+  - On success the API returns HTTP 200 with a JWT (7-day expiry) and the
+    student object.
+  - Frontend stores the token and student object in localStorage.
+  - Frontend redirects to /dashboard on success.
+
+API: POST /api/students/login
+
+---
+
+FEAT-3 — Dashboard
+Status: Complete
+
+Description:
+  An authenticated student views their profile and navigates the application.
+
+Acceptance Criteria:
+  - Route /dashboard is protected: if no valid token exists in localStorage
+    the user is redirected to /login.
+  - A GET /api/students/dashboard request with a valid Bearer token returns
+    the authenticated student's profile.
+  - A 401 response clears localStorage and redirects to /login.
+  - Dashboard shows the student's name, email, and member-since date.
+  - Placeholder stat cards are shown for future features.
+  - A "Sign Out" button clears localStorage and redirects to /login.
+
+API: GET /api/students/dashboard  (requires Bearer token)
+
+---
+
+FEAT-4 — Create Semester
+Status: Complete
+
+Description:
+  An authenticated student creates a semester by providing its name, subjects
+  (with optional codes and credit values), and topics for each subject.
+
+Input:
+  - Semester name / number (required, max 100 chars). Example: Semester 5
+  - One or more subjects, each with:
+      - Subject name (required, max 200 chars)
+      - Subject code (optional, max 20 chars). Example: CS301
+      - Credits (required, numeric, 0.5-20)
+      - One or more topics, each with a name (required, max 200 chars)
+  - The user can dynamically add and remove subjects.
+  - The user can dynamically add and remove topics within each subject.
+
+Validation (client and server):
+  - Semester name cannot be empty.
+  - At least one subject must be present.
+  - Subject name cannot be empty.
+  - Credits must be a valid number between 0.5 and 20.
+  - Each subject must have at least one topic.
+  - Topic name cannot be empty.
+  - Clear, inline validation messages are shown without page reload.
+
+Behaviour:
+  - Requires a valid JWT; unauthenticated requests are rejected with HTTP 401.
+  - A 401 response on the create form clears localStorage and redirects to /login.
+  - On success the API returns HTTP 201 with the saved semester object.
+  - On success the frontend shows a confirmation screen with options to create
+    another semester or return to the dashboard.
+
+Navigation:
+  - The Dashboard contains a "Create Semester" button linking to /semester/create.
+  - The Create Semester page has a "Dashboard" back-link in the nav bar and a
+    "Cancel" button in the form footer.
+
+API Endpoints:
+  POST /api/semesters        Create a new semester
+  GET  /api/semesters        List all semesters for the authenticated student
+  GET  /api/semesters/:id    Get a single semester by ID
+
+  All three endpoints require a valid Bearer token.
+
+Data Model (Semester — MongoDB collection: semesters):
+  {
+    _id:       ObjectId (auto)
+    student:   ObjectId  (ref: Student, indexed)
+    name:      String    [required, 1-100 chars, trimmed]
+    subjects:  [
+      {
+        _id:     ObjectId (auto)
+        name:    String  [required, 1-200 chars, trimmed]
+        code:    String  [optional, max 20 chars, trimmed, default ""]
+        credits: Number  [required, 0.5-20]
+        topics:  [
+          {
+            _id:  ObjectId (auto)
+            name: String [required, 1-200 chars, trimmed]
+          }
+        ]  (min 1 topic per subject)
+      }
+    ]  (min 1 subject per semester)
+    createdAt: Date (auto)
+    updatedAt: Date (auto)
+  }
+
+
+PLANNED FEATURES (NOT YET IMPLEMENTED)
+---------------------------------------
+
+FEAT-5 — AI Priority Study Plan Generation
+
+Description:
+  Generate a personalised, priority-ordered study plan from the student's
+  semester data using an AI model.
+
+Inputs (from the stored semester):
+  - Subject credits (higher credits -> higher base priority)
+  - Topics per subject (more topics -> more granular scheduling)
+  - Exam / assignment dates (to be collected in a future feature)
+  - Student-reported difficulty per topic (to be collected in a future feature)
+
+Outputs:
+  - A day-by-day or week-by-week study schedule
+  - Priority scores per subject and topic
+  - Estimated study hours per topic
+
+
+API SUMMARY
+-----------
+Method  Path                       Auth        Feature
+------  -------------------------  ----------  -------
+POST    /api/students/register     Public      FEAT-1
+POST    /api/students/login        Public      FEAT-2
+GET     /api/students/dashboard    Bearer JWT  FEAT-3
+POST    /api/semesters             Bearer JWT  FEAT-4
+GET     /api/semesters             Bearer JWT  FEAT-4
+GET     /api/semesters/:id         Bearer JWT  FEAT-4
+GET     /api/health                Public      Health check
+
+
+FRONTEND ROUTES
+---------------
+Path               Component        Auth Required
+-----------------  ---------------  -------------
+/login             Login            No
+/register          Register         No
+/dashboard         Dashboard        Yes (checked on mount)
+/semester/create   CreateSemester   Yes (checked on mount)
+*                  Redirect /login  —
+
+
+PROJECT STRUCTURE
+-----------------
+AI-based-Priority-Study-Planner/
+  requirements.txt                          <- this file
+  README.md
+  backend/
+    .env.example
+    package.json
+    src/
+      app.js                                <- Express app + route mounting
+      server.js                             <- Entry point (DB connect + listen)
+      config/
+        db.js                               <- Mongoose connect
+      controllers/
+        studentController.js                <- register, login, getDashboard
+        semesterController.js               <- createSemester, getSemesters, getSemesterById
+      middleware/
+        auth.js                             <- JWT authenticate middleware
+        validation.js                       <- Student registration/login rules
+        semesterValidation.js               <- Semester creation rules
+      models/
+        Student.js                          <- Student Mongoose schema
+        Semester.js                         <- Semester schema (nested subjects + topics)
+      routes/
+        studentRoutes.js                    <- /api/students/*
+        semesterRoutes.js                   <- /api/semesters/*
+  frontend/
+    vite.config.js                          <- Dev server port 3000, proxy /api -> 5000
+    src/
+      App.jsx                               <- Router + route definitions
+      index.css                             <- Global design system (CSS variables)
+      components/
+        Login/
+        Register/
+        Dashboard/                          <- Shows Create Semester button
+        CreateSemester/                     <- New: semester creation form
+
+
+ENVIRONMENT VARIABLES (backend .env)
+-------------------------------------
+Variable         Description                        Default
+---------------  ---------------------------------  ----------
+PORT             Server port                        5000
+MONGODB_URI      MongoDB connection string          (required)
+JWT_SECRET       Secret key for signing JWTs        (required)
+JWT_EXPIRES_IN   JWT expiry duration                7d
+NODE_ENV         Runtime environment                development
+
+
+RUNNING THE PROJECT
+-------------------
+Backend:
+  cd backend
+  cp .env.example .env        # fill in MONGODB_URI and JWT_SECRET
+  npm install
+  npm run dev                 # node --watch src/server.js  (port 5000)
+
+Frontend (separate terminal):
+  cd frontend
+  npm install
+  npm run dev                 # vite dev server  (port 3000)
+
+Run backend tests:
+  cd backend && npm test
+
+Run frontend lint:
+  cd frontend && npm run lint

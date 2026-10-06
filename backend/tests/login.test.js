@@ -1,4 +1,4 @@
-/**
+requirements intxxt/**
  * AISP-2: Student Login — Automated Test Suite
  *
  * Tests ONLY the login functionality implemented in AISP-2.

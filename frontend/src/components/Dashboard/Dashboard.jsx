@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import './Dashboard.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -238,8 +238,11 @@ export default function Dashboard() {
 
         <div className="coming-soon-card">
           <p className="coming-soon-text">
-            🚀 More features coming soon — subjects, semesters, AI-powered study plans, and more!
+            🚀 More features coming soon — AI-powered study plans, and more!
           </p>
+          <Link to="/semester/create" className="create-semester-btn" id="create-semester-btn">
+            + Create Semester
+          </Link>
         </div>
       </main>
     </div>

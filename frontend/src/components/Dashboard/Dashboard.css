@@ -363,3 +363,36 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Create Semester CTA (added for Create Semester feature) ───────────────── */
+.coming-soon-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.create-semester-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.create-semester-btn:hover {
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+  box-shadow: 0 4px 16px var(--color-primary-glow);
+  transform: translateY(-1px);
+  color: white;
+  text-decoration: none;
+}
