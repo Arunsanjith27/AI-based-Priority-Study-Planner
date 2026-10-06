@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import './Register.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -382,7 +383,7 @@ export default function Register() {
 
         {/* Footer */}
         <div className="register-footer">
-          Already have an account? <a href="/login">Sign in</a>
+          Already have an account? <Link to="/login">Sign in</Link>
         </div>
       </div>
     </div>
