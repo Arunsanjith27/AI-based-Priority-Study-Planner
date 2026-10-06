@@ -3,6 +3,7 @@ import Register from './components/Register/Register';
 import Login from './components/Login/Login';
 import Dashboard from './components/Dashboard/Dashboard';
 import CreateSemester from './components/CreateSemester/CreateSemester';
+import ManageSubjects from './components/ManageSubjects/ManageSubjects';
 import './App.css';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/semester/create" element={<CreateSemester />} />
+          <Route path="/subjects/manage" element={<ManageSubjects />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>

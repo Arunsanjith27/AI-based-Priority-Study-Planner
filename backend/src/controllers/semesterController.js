@@ -109,8 +109,144 @@ const getSemesterById = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Add a new subject to an existing semester
+ * @route   POST /api/semesters/:id/subjects
+ * @access  Private (requires authentication)
+ */
+const addSubject = async (req, res) => {
+  try {
+    const semester = await Semester.findOne({
+      _id: req.params.id,
+      student: req.student._id,
+    });
+
+    if (!semester) {
+      return res.status(404).json({ success: false, message: 'Semester not found.' });
+    }
+
+    const { name, code, credits, topics } = req.body;
+
+    semester.subjects.push({ name, code: code || '', credits, topics: topics || [] });
+    await semester.save();
+
+    const newSubject = semester.subjects[semester.subjects.length - 1];
+
+    res.status(201).json({
+      success: true,
+      message: 'Subject added successfully.',
+      data: { subject: newSubject, semester },
+    });
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      const formattedErrors = Object.values(error.errors).map((err) => ({
+        field: err.path,
+        message: err.message,
+      }));
+      return res.status(400).json({ success: false, message: 'Validation failed', errors: formattedErrors });
+    }
+    if (error.name === 'CastError') {
+      return res.status(404).json({ success: false, message: 'Semester not found.' });
+    }
+    console.error('Add subject error:', error.message);
+    res.status(500).json({ success: false, message: 'An unexpected error occurred. Please try again.' });
+  }
+};
+
+/**
+ * @desc    Update an existing subject (name, code, credits, topics) within a semester
+ * @route   PUT /api/semesters/:id/subjects/:subjectId
+ * @access  Private (requires authentication)
+ */
+const updateSubject = async (req, res) => {
+  try {
+    const semester = await Semester.findOne({
+      _id: req.params.id,
+      student: req.student._id,
+    });
+
+    if (!semester) {
+      return res.status(404).json({ success: false, message: 'Semester not found.' });
+    }
+
+    const subject = semester.subjects.id(req.params.subjectId);
+    if (!subject) {
+      return res.status(404).json({ success: false, message: 'Subject not found.' });
+    }
+
+    const { name, code, credits, topics } = req.body;
+
+    if (name !== undefined) subject.name = name;
+    if (code !== undefined) subject.code = code;
+    if (credits !== undefined) subject.credits = credits;
+    if (topics !== undefined) subject.topics = topics;
+
+    await semester.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Subject updated successfully.',
+      data: { subject, semester },
+    });
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      const formattedErrors = Object.values(error.errors).map((err) => ({
+        field: err.path,
+        message: err.message,
+      }));
+      return res.status(400).json({ success: false, message: 'Validation failed', errors: formattedErrors });
+    }
+    if (error.name === 'CastError') {
+      return res.status(404).json({ success: false, message: 'Not found.' });
+    }
+    console.error('Update subject error:', error.message);
+    res.status(500).json({ success: false, message: 'An unexpected error occurred. Please try again.' });
+  }
+};
+
+/**
+ * @desc    Delete a subject from a semester
+ * @route   DELETE /api/semesters/:id/subjects/:subjectId
+ * @access  Private (requires authentication)
+ */
+const deleteSubject = async (req, res) => {
+  try {
+    const semester = await Semester.findOne({
+      _id: req.params.id,
+      student: req.student._id,
+    });
+
+    if (!semester) {
+      return res.status(404).json({ success: false, message: 'Semester not found.' });
+    }
+
+    const subject = semester.subjects.id(req.params.subjectId);
+    if (!subject) {
+      return res.status(404).json({ success: false, message: 'Subject not found.' });
+    }
+
+    subject.deleteOne();
+    await semester.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Subject deleted successfully.',
+      data: { semester },
+    });
+  } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(404).json({ success: false, message: 'Not found.' });
+    }
+    console.error('Delete subject error:', error.message);
+    res.status(500).json({ success: false, message: 'An unexpected error occurred. Please try again.' });
+  }
+};
+
 module.exports = {
   createSemester,
   getSemesters,
   getSemesterById,
+  addSubject,
+  updateSubject,
+  deleteSubject,
 };

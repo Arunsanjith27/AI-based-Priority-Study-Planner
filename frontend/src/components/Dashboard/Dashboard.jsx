@@ -240,9 +240,14 @@ export default function Dashboard() {
           <p className="coming-soon-text">
             🚀 More features coming soon — AI-powered study plans, and more!
           </p>
-          <Link to="/semester/create" className="create-semester-btn" id="create-semester-btn">
-            + Create Semester
-          </Link>
+          <div className="dashboard-cta-group">
+            <Link to="/semester/create" className="create-semester-btn" id="create-semester-btn">
+              + Create Semester
+            </Link>
+            <Link to="/subjects/manage" className="manage-subjects-btn" id="manage-subjects-btn">
+              Manage Subjects
+            </Link>
+          </div>
         </div>
       </main>
     </div>
