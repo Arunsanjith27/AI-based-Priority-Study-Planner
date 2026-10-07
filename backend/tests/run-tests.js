@@ -2,11 +2,13 @@ const { test, before, after, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 const app = require('../src/app');
 const Student = require('../src/models/Student');
+const Syllabus = require('../src/models/Syllabus');
 const bcrypt = require('bcryptjs');
 
-const TEST_DB_URI = process.env.TEST_MONGODB_URI || 'mongodb://127.0.0.1:27017/ai-study-planner-test';
+let mongoServer;
 
 const validStudent = {
   name: 'John Doe',
@@ -15,16 +17,25 @@ const validStudent = {
 };
 
 before(async () => {
+  mongoServer = await MongoMemoryServer.create();
+  const TEST_DB_URI = mongoServer.getUri();
+
   await mongoose.connect(TEST_DB_URI);
 });
 
 after(async () => {
   await Student.deleteMany({});
+  await Syllabus.deleteMany({});
   await mongoose.connection.close();
+
+  if (mongoServer) {
+    await mongoServer.stop();
+  }
 });
 
 beforeEach(async () => {
   await Student.deleteMany({});
+  await Syllabus.deleteMany({});
 });
 
 // ============================================================
@@ -394,4 +405,166 @@ test('TEST 10 — Invalid registration: empty body -> no account created', async
   assert.equal(res.status, 400);
   const count = await Student.countDocuments();
   assert.equal(count, 0);
+});
+
+// ============================================================
+// AISP-5 — Syllabus Upload
+// ============================================================
+
+test('AISP-5 — Upload TXT syllabus successfully', async () => {
+  const res = await request(app)
+    .post('/api/syllabus/upload')
+    .field('subject', 'Operating Systems')
+    .attach(
+      'syllabus',
+      Buffer.from(
+        'Operating Systems Syllabus\nUnit 1: Processes\nUnit 2: Memory Management'
+      ),
+      'os-syllabus.txt'
+    );
+
+  assert.equal(res.status, 201);
+  assert.equal(res.body.success, true);
+  assert.match(res.body.message, /uploaded.*extracted/i);
+  assert.equal(res.body.syllabus.subject, 'Operating Systems');
+  assert.equal(res.body.syllabus.originalFileName, 'os-syllabus.txt');
+  assert.equal(res.body.syllabus.fileType, 'text/plain');
+  assert.match(res.body.syllabus.extractedText, /Unit 1: Processes/);
+
+  const syllabusInDb = await Syllabus.findOne({
+    originalFileName: 'os-syllabus.txt',
+  });
+
+  assert.ok(syllabusInDb);
+  assert.equal(syllabusInDb.subject, 'Operating Systems');
+  assert.match(syllabusInDb.extractedText, /Memory Management/);
+});
+
+test('AISP-5 — Reject upload when subject is missing', async () => {
+  const res = await request(app)
+    .post('/api/syllabus/upload')
+    .attach(
+      'syllabus',
+      Buffer.from('Test syllabus content'),
+      'test.txt'
+    );
+
+  assert.equal(res.status, 400);
+  assert.equal(res.body.success, false);
+  assert.match(res.body.message, /subject is required/i);
+
+  const count = await Syllabus.countDocuments();
+  assert.equal(count, 0);
+});
+
+test('AISP-5 — Reject upload when file is missing', async () => {
+  const res = await request(app)
+    .post('/api/syllabus/upload')
+    .field('subject', 'Operating Systems');
+
+  assert.equal(res.status, 400);
+  assert.equal(res.body.success, false);
+  assert.match(res.body.message, /file is required/i);
+
+  const count = await Syllabus.countDocuments();
+  assert.equal(count, 0);
+});
+
+test('AISP-5 — Reject unsupported file format', async () => {
+  const res = await request(app)
+    .post('/api/syllabus/upload')
+    .field('subject', 'Operating Systems')
+    .attach(
+      'syllabus',
+      Buffer.from('This is not a supported syllabus format'),
+      'syllabus.docx'
+    );
+
+  assert.equal(res.status, 500);
+  assert.equal(res.body.success, false);
+});
+
+
+// ============================================================
+// AISP-6 — Syllabus Text Extraction
+// ============================================================
+
+test('AISP-6 — Extract readable text from TXT syllabus', async () => {
+  const syllabusText = `
+Operating Systems
+Unit 1: Introduction
+Unit 2: Process Management
+Unit 3: Memory Management
+`;
+
+  const res = await request(app)
+    .post('/api/syllabus/upload')
+    .field('subject', 'Operating Systems')
+    .attach(
+      'syllabus',
+      Buffer.from(syllabusText),
+      'operating-systems.txt'
+    );
+
+  assert.equal(res.status, 201);
+  assert.equal(res.body.success, true);
+  assert.equal(
+    res.body.syllabus.extractedText.trim(),
+    syllabusText.trim()
+  );
+});
+
+test('AISP-6 — Associate extracted text with the correct subject', async () => {
+  const res = await request(app)
+    .post('/api/syllabus/upload')
+    .field('subject', 'Database Management Systems')
+    .attach(
+      'syllabus',
+      Buffer.from(
+        'DBMS Syllabus\nUnit 1: ER Model\nUnit 2: SQL'
+      ),
+      'dbms.txt'
+    );
+
+  assert.equal(res.status, 201);
+
+  const syllabusInDb = await Syllabus.findOne({
+    originalFileName: 'dbms.txt',
+  });
+
+  assert.ok(syllabusInDb);
+  assert.equal(syllabusInDb.subject, 'Database Management Systems');
+  assert.match(syllabusInDb.extractedText, /ER Model/);
+});
+
+test('AISP-6 — Reject syllabus with no readable text', async () => {
+  const res = await request(app)
+    .post('/api/syllabus/upload')
+    .field('subject', 'Operating Systems')
+    .attach(
+      'syllabus',
+      Buffer.from('   \n   \n   '),
+      'empty.txt'
+    );
+
+  assert.equal(res.status, 400);
+  assert.equal(res.body.success, false);
+  assert.match(res.body.message, /no readable text/i);
+
+  const count = await Syllabus.countDocuments();
+  assert.equal(count, 0);
+});
+
+test('AISP-6 — Reject unsupported extraction type', async () => {
+  const res = await request(app)
+    .post('/api/syllabus/upload')
+    .field('subject', 'Operating Systems')
+    .attach(
+      'syllabus',
+      Buffer.from('Unsupported content'),
+      'notes.doc'
+    );
+
+  assert.equal(res.status, 500);
+  assert.equal(res.body.success, false);
 });
