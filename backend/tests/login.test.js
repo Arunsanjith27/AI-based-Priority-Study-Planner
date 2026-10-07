@@ -47,7 +47,8 @@ before(async () => {
   require('dotenv').config();
 
   // Connect to test database
-  await mongoose.connect(process.env.MONGODB_URI);
+  const TEST_DB_URI = process.env.TEST_MONGODB_URI || 'mongodb://127.0.0.1:27017/ai-study-planner-test';
+  await mongoose.connect(TEST_DB_URI);
 
   // Start the server
   server = app.listen(TEST_PORT);
