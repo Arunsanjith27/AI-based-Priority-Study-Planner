@@ -17,10 +17,13 @@ const validStudent = {
 };
 
 before(async () => {
-  mongoServer = await MongoMemoryServer.create();
-  const TEST_DB_URI = mongoServer.getUri();
-
-  await mongoose.connect(TEST_DB_URI);
+  const LOCAL_DB_URI = process.env.TEST_MONGODB_URI || 'mongodb://127.0.0.1:27017/ai-study-planner-test';
+  try {
+    await mongoose.connect(LOCAL_DB_URI, { serverSelectionTimeoutMS: 2000 });
+  } catch {
+    mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri());
+  }
 });
 
 after(async () => {

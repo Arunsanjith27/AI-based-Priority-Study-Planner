@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node --test tests/run-tests.js",
+    "test": "node --test tests/run-tests.js tests/login.test.js",
     "test:coverage": "node --test --experimental-test-coverage tests/run-tests.js"
   },
   "keywords": [],

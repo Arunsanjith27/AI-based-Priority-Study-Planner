@@ -1,0 +1,223 @@
+.us-page {
+  min-height: 100vh;
+  background: var(--bg-primary, #0f172a);
+  color: var(--text-primary, #f8fafc);
+  font-family: inherit;
+}
+
+.us-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.us-heading {
+  margin-bottom: 2rem;
+}
+
+.us-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--text-primary, #f8fafc);
+  margin-bottom: 0.5rem;
+}
+
+.us-subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.us-alert {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.us-card {
+  background: var(--bg-secondary, #1e293b);
+  border: 1px solid var(--border-color, #334155);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.us-card-header {
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color, #334155);
+}
+
+.us-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #f8fafc);
+}
+
+.us-dropzone {
+  border: 2px dashed var(--border-color, #334155);
+  border-radius: 0.75rem;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: rgba(15, 23, 42, 0.4);
+  position: relative;
+}
+
+.us-dropzone:hover,
+.dropzone-active {
+  border-color: var(--accent-primary, #6366f1);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.dropzone-has-file {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.us-file-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.us-dropzone-label {
+  cursor: pointer;
+  display: block;
+  width: 100%;
+}
+
+.us-dropzone-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.us-dropzone-prompt svg {
+  width: 48px;
+  height: 48px;
+  stroke: var(--accent-primary, #6366f1);
+}
+
+.us-dropzone-text {
+  font-size: 1rem;
+  color: var(--text-primary, #f8fafc);
+}
+
+.us-dropzone-sub {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.us-file-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-size: 1rem;
+  color: #10b981;
+  font-weight: 500;
+}
+
+.us-file-info svg {
+  width: 24px;
+  height: 24px;
+}
+
+.us-file-size {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.us-form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* Result Card */
+.us-result-card {
+  background: var(--bg-secondary, #1e293b);
+  border: 1px solid var(--border-color, #334155);
+  border-radius: 0.75rem;
+  padding: 1.75rem;
+}
+
+.us-result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color, #334155);
+}
+
+.us-result-status {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.us-result-status svg {
+  width: 36px;
+  height: 36px;
+  stroke: #10b981;
+  flex-shrink: 0;
+}
+
+.us-result-status h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #f8fafc);
+}
+
+.us-result-status p {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #94a3b8);
+  margin-top: 0.25rem;
+}
+
+.us-text-preview-container {
+  margin-bottom: 1.5rem;
+}
+
+.us-preview-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #f8fafc);
+  margin-bottom: 0.75rem;
+}
+
+.us-extracted-text {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--border-color, #334155);
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  max-height: 400px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: #e2e8f0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.us-result-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}

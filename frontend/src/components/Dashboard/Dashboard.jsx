@@ -247,6 +247,9 @@ export default function Dashboard() {
             <Link to="/subjects/manage" className="manage-subjects-btn" id="manage-subjects-btn">
               Manage Subjects
             </Link>
+            <Link to="/syllabus/upload" className="upload-syllabus-btn" id="upload-syllabus-btn">
+              Upload Syllabus
+            </Link>
           </div>
         </div>
       </main>

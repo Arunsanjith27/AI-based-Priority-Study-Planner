@@ -10,6 +10,9 @@ const uploadSyllabus = async (req, res) => {
     uploadedFilePath = req.file?.path;
 
     if (!subject || !subject.trim()) {
+      if (uploadedFilePath) {
+        await fs.unlink(uploadedFilePath).catch(() => {});
+      }
       return res.status(400).json({
         success: false,
         message: 'Subject is required',
