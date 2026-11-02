@@ -2,7 +2,8 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 
-const { uploadSyllabus } = require('../controllers/syllabusController');
+const { uploadSyllabus, getSyllabusTopics } = require('../controllers/syllabusController');
+const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -42,5 +43,6 @@ const upload = multer({
 
 // POST /api/syllabus/upload
 router.post('/upload', upload.single('syllabus'), uploadSyllabus);
+router.get('/topics', authenticate, getSyllabusTopics);
 
 module.exports = router;

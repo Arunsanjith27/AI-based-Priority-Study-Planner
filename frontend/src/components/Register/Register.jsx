@@ -1,8 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import API_BASE from '../../config/api';
 import './Register.css';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 /**
  * Password requirements — kept in sync with backend validation

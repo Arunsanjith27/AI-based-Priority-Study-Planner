@@ -27,6 +27,10 @@ const syllabusSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    topics: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,

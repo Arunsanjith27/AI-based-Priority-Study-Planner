@@ -109,6 +109,23 @@
   gap: var(--space-5);
 }
 
+.nav-planner-btn {
+  padding: var(--space-2) var(--space-4);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-primary-light);
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+}
+
+.nav-planner-btn:hover {
+  color: white;
+  background: var(--color-primary);
+}
+
 .nav-greeting {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);

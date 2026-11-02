@@ -14,6 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 // API Routes
 app.use('/api/students', require('./routes/studentRoutes'));
 app.use('/api/syllabus', require('./routes/syllabusRoutes'));
+app.use('/api/planner', require('./routes/plannerRoutes'));
 
 // Health check
 app.get('/api/health', (req, res) => {

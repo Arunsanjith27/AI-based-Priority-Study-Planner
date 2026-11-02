@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_BASE from '../../config/api';
 import './Dashboard.css';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 /* ─── SVG Icons ─── */
 
@@ -74,7 +73,7 @@ export default function Dashboard() {
       try {
         const response = await fetch(`${API_BASE}/students/dashboard`, {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: "Bearer " + token,
           },
         });
 
@@ -149,6 +148,13 @@ export default function Dashboard() {
           <span className="nav-title">AI Study Planner</span>
         </div>
         <div className="nav-actions">
+          <button
+            className="nav-planner-btn"
+            onClick={() => navigate('/planner')}
+            type="button"
+          >
+            Study Planner
+          </button>
           <span className="nav-greeting">
             Hi, <strong>{student?.name || 'Student'}</strong>
           </span>

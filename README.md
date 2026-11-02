@@ -64,7 +64,7 @@ npm install
 npm run dev
 ```
 
-The frontend runs on `http://localhost:3000` and proxies API requests to `http://localhost:5000`.
+The frontend runs on the Vite URL shown in the terminal and sends API requests to `http://localhost:5001/api` by default.
 
 ### Running Tests
 
