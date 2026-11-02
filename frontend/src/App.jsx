@@ -5,6 +5,7 @@ import Dashboard from './components/Dashboard/Dashboard';
 import CreateSemester from './components/CreateSemester/CreateSemester';
 import ManageSubjects from './components/ManageSubjects/ManageSubjects';
 import UploadSyllabus from './components/UploadSyllabus/UploadSyllabus';
+import ReviewAnalysis from './components/ReviewAnalysis/ReviewAnalysis';
 import './App.css';
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
           <Route path="/semester/create" element={<CreateSemester />} />
           <Route path="/subjects/manage" element={<ManageSubjects />} />
           <Route path="/syllabus/upload" element={<UploadSyllabus />} />
+          <Route path="/syllabus/:id/review" element={<ReviewAnalysis />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </div>
