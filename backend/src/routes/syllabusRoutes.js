@@ -3,7 +3,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-const { uploadSyllabus } = require('../controllers/syllabusController');
+const { uploadSyllabus, analyzeSyllabusById } = require('../controllers/syllabusController');
+const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -49,7 +50,16 @@ const upload = multer({
   },
 });
 
+// All syllabus routes require authentication. Uploads and analysis are scoped
+// to the authenticated student (req.student), set by the authenticate middleware.
+router.use(authenticate);
+
 // POST /api/syllabus/upload
 router.post('/upload', upload.single('syllabus'), uploadSyllabus);
+
+// POST /api/syllabus/:id/analyze
+// Analyzes a previously-uploaded syllabus with the local AI model (Ollama).
+// Ownership is enforced in the handler (findOne by student).
+router.post('/:id/analyze', analyzeSyllabusById);
 
 module.exports = router;

@@ -221,3 +221,187 @@
   justify-content: flex-end;
   gap: 1rem;
 }
+
+/* ─── AI Syllabus Analysis Panel ─── */
+.us-ai-panel {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  border: 1px solid var(--border-color, #334155);
+  border-radius: 0.75rem;
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.us-ai-panel-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.us-ai-sparkle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 0.625rem;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  flex-shrink: 0;
+}
+
+.us-ai-sparkle svg {
+  width: 24px;
+  height: 24px;
+  stroke: var(--accent-primary, #6366f1);
+}
+
+.us-ai-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary, #f8fafc);
+  margin-bottom: 0.25rem;
+}
+
+.us-ai-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #94a3b8);
+  line-height: 1.4;
+}
+
+.us-ai-analyze-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.us-ai-analyze-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.us-ai-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.95rem;
+}
+
+.us-ai-result {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.us-ai-fields {
+  display: grid;
+  grid-template-columns: 1fr 140px 130px;
+  gap: 1rem;
+  align-items: end;
+}
+
+.us-ai-topics-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.us-ai-section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary, #f8fafc);
+}
+
+.us-ai-topic-count {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.us-ai-topic-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.us-ai-topic-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color, #334155);
+  background: rgba(15, 23, 42, 0.4);
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.us-ai-topic-chip:hover {
+  border-color: rgba(99, 102, 241, 0.5);
+  color: var(--text-primary, #f8fafc);
+}
+
+.us-ai-topic-chip.is-selected {
+  border-color: var(--accent-primary, #6366f1);
+  background: rgba(99, 102, 241, 0.18);
+  color: var(--text-primary, #f8fafc);
+}
+
+.us-ai-chip-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent-primary, #6366f1);
+}
+
+.us-ai-apply {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.us-ai-semester-field {
+  flex: 1;
+}
+
+.us-ai-apply-btn {
+  white-space: nowrap;
+}
+
+.us-ai-manage-link {
+  margin-left: auto;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.us-ai-meta {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #94a3b8);
+  margin-top: 0.25rem;
+}
+
+.us-ai-meta strong {
+  color: var(--text-primary, #f8fafc);
+}
+
+@media (max-width: 640px) {
+  .us-ai-fields {
+    grid-template-columns: 1fr;
+  }
+  .us-ai-apply {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .us-ai-apply-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

@@ -64,6 +64,13 @@ const LogOutIcon = () => (
   </svg>
 );
 
+const SparklesIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 3l1.6 4.6L18 9l-4.4 1.4L12 15l-1.6-4.6L6 9l4.4-1.4L12 3z" />
+    <path d="M19 14l.8 2.3L22 17l-2.2.7L19 20l-.8-2.3L16 17l2.2-.7L19 14z" />
+  </svg>
+);
+
 export default function UploadSyllabus() {
   const navigate = useNavigate();
 
@@ -85,6 +92,22 @@ export default function UploadSyllabus() {
   const [errorMessage, setErrorMessage] = useState('');
   const [resultSyllabus, setResultSyllabus] = useState(null);
   const [copiedText, setCopiedText] = useState(false);
+
+  // AI Analysis State
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
+  const [analysisError, setAnalysisError] = useState('');
+  const [semesters, setSemesters] = useState([]);
+  const [selectedSemesterId, setSelectedSemesterId] = useState('');
+  const [selectedTopicIndexes, setSelectedTopicIndexes] = useState(() => new Set());
+  const [editableSubject, setEditableSubject] = useState({
+    name: '',
+    code: '',
+    credits: 3,
+  });
+  const [isApplying, setIsApplying] = useState(false);
+  const [applyMessage, setApplyMessage] = useState('');
+  const [applyError, setApplyError] = useState('');
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -184,6 +207,138 @@ export default function UploadSyllabus() {
       navigator.clipboard.writeText(resultSyllabus.extractedText);
       setCopiedText(true);
       setTimeout(() => setCopiedText(false), 2000);
+    }
+  };
+
+  const resetAiState = () => {
+    setAnalysis(null);
+    setAnalysisError('');
+    setSemesters([]);
+    setSelectedSemesterId('');
+    setSelectedTopicIndexes(new Set());
+    setEditableSubject({ name: '', code: '', credits: 3 });
+    setApplyMessage('');
+    setApplyError('');
+  };
+
+  const fetchSemesters = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/semesters`, {
+        headers: { Authorization: token ? `Bearer ${token}` : '' },
+      });
+      const data = await res.json();
+      if (res.ok && data.data?.semesters) {
+        setSemesters(data.data.semesters);
+        if (data.data.semesters.length > 0) {
+          setSelectedSemesterId(data.data.semesters[0]._id);
+        }
+      }
+    } catch {
+      // Non-fatal: the user can still read the analysis without applying it.
+    }
+  };
+
+  const handleAnalyze = async () => {
+    if (!resultSyllabus?._id) return;
+    resetAiState();
+    setIsAnalyzing(true);
+    try {
+      const res = await fetch(
+        `${API_BASE}/syllabus/${resultSyllabus._id}/analyze`,
+        {
+          method: 'POST',
+          headers: { Authorization: token ? `Bearer ${token}` : '' },
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        setAnalysisError(
+          data.message || 'AI analysis could not be completed.'
+        );
+        return;
+      }
+      const a = data.data.analysis;
+      setAnalysis(a);
+      setEditableSubject({
+        name: a.subjectName || '',
+        code: a.code || '',
+        credits: a.credits,
+      });
+      setSelectedTopicIndexes(new Set(a.topics.map((_, i) => i)));
+      await fetchSemesters();
+    } catch {
+      setAnalysisError(
+        'Unable to reach the server. Please check your network and try again.'
+      );
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const toggleTopic = (index) => {
+    setSelectedTopicIndexes((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  };
+
+  const handleApplyToSemester = async () => {
+    setApplyError('');
+    setApplyMessage('');
+    if (!analysis) return;
+    if (!selectedSemesterId) {
+      setApplyError('Please select a semester to add this subject to.');
+      return;
+    }
+    const selectedTopics = analysis.topics
+      .filter((_, i) => selectedTopicIndexes.has(i))
+      .map((t) => ({ name: t.name }));
+    if (selectedTopics.length === 0) {
+      setApplyError('Select at least one topic to add.');
+      return;
+    }
+    const name = editableSubject.name.trim();
+    if (!name) {
+      setApplyError('Subject name cannot be empty.');
+      return;
+    }
+    setIsApplying(true);
+    try {
+      const res = await fetch(
+        `${API_BASE}/semesters/${selectedSemesterId}/subjects`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+          body: JSON.stringify({
+            name,
+            code: editableSubject.code.trim(),
+            credits: Number(editableSubject.credits),
+            topics: selectedTopics,
+          }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        setApplyError(data.message || 'Could not add the subject.');
+        return;
+      }
+      setApplyMessage(
+        `Added "${name}" with ${selectedTopics.length} topic${
+          selectedTopics.length === 1 ? '' : 's'
+        } to the semester.`
+      );
+    } catch {
+      setApplyError('Unable to reach the server. Please try again.');
+    } finally {
+      setIsApplying(false);
     }
   };
 
@@ -336,6 +491,194 @@ export default function UploadSyllabus() {
               <pre className="us-extracted-text">{resultSyllabus.extractedText}</pre>
             </div>
 
+            {/* AI Syllabus Analysis */}
+            <div className="us-ai-panel">
+              <div className="us-ai-panel-header">
+                <div className="us-ai-sparkle">
+                  <SparklesIcon />
+                </div>
+                <div>
+                  <h3 className="us-ai-title">AI Syllabus Analysis</h3>
+                  <p className="us-ai-subtitle">
+                    Convert this syllabus into a structured subject outline using a
+                    local AI model (Ollama). No external API, no cost.
+                  </p>
+                </div>
+              </div>
+
+              {!analysis && !isAnalyzing && !analysisError && (
+                <button
+                  type="button"
+                  className="cs-btn-primary us-ai-analyze-btn"
+                  onClick={handleAnalyze}
+                  id="analyze-syllabus-btn"
+                >
+                  <SparklesIcon /> Analyze with AI
+                </button>
+              )}
+
+              {isAnalyzing && (
+                <div className="us-ai-loading">
+                  <span className="spinner" />
+                  <span>Analyzing syllabus with the local AI model…</span>
+                </div>
+              )}
+
+              {analysisError && (
+                <div className="alert alert-error us-alert" role="alert">
+                  <AlertCircleIcon />
+                  <span>{analysisError}</span>
+                </div>
+              )}
+
+              {analysis && (
+                <div className="us-ai-result">
+                  <div className="us-ai-fields">
+                    <div className="form-group">
+                      <label className="form-label" htmlFor="ai-subject-name">
+                        Subject name
+                      </label>
+                      <input
+                        id="ai-subject-name"
+                        className="form-input"
+                        type="text"
+                        maxLength={200}
+                        value={editableSubject.name}
+                        onChange={(e) =>
+                          setEditableSubject((s) => ({ ...s, name: e.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className="form-group us-ai-field-code">
+                      <label className="form-label" htmlFor="ai-subject-code">
+                        Code
+                      </label>
+                      <input
+                        id="ai-subject-code"
+                        className="form-input"
+                        type="text"
+                        maxLength={20}
+                        value={editableSubject.code}
+                        onChange={(e) =>
+                          setEditableSubject((s) => ({ ...s, code: e.target.value }))
+                        }
+                      />
+                    </div>
+                    <div className="form-group us-ai-field-credits">
+                      <label className="form-label" htmlFor="ai-subject-credits">
+                        Credits
+                      </label>
+                      <input
+                        id="ai-subject-credits"
+                        className="form-input"
+                        type="number"
+                        min={0.5}
+                        max={20}
+                        step={0.5}
+                        value={editableSubject.credits}
+                        onChange={(e) =>
+                          setEditableSubject((s) => ({
+                            ...s,
+                            credits: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="us-ai-topics">
+                    <div className="us-ai-topics-head">
+                      <h4 className="us-ai-section-title">Suggested topics</h4>
+                      <span className="us-ai-topic-count">
+                        {selectedTopicIndexes.size}/{analysis.topics.length} selected
+                      </span>
+                    </div>
+                    <div className="us-ai-topic-chips">
+                      {analysis.topics.map((t, i) => {
+                        const selected = selectedTopicIndexes.has(i);
+                        return (
+                          <button
+                            key={`${t.name}-${i}`}
+                            type="button"
+                            className={`us-ai-topic-chip ${selected ? 'is-selected' : ''}`}
+                            onClick={() => toggleTopic(i)}
+                          >
+                            <span className="us-ai-chip-check">
+                              {selected ? '✓' : ''}
+                            </span>
+                            {t.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="us-ai-apply">
+                    <div className="form-group us-ai-semester-field">
+                      <label className="form-label" htmlFor="ai-semester-select">
+                        Add to semester
+                      </label>
+                      <select
+                        id="ai-semester-select"
+                        className="form-input"
+                        value={selectedSemesterId}
+                        onChange={(e) => setSelectedSemesterId(e.target.value)}
+                      >
+                        {semesters.length === 0 && (
+                          <option value="">No semesters yet — create one first</option>
+                        )}
+                        {semesters.map((s) => (
+                          <option key={s._id} value={s._id}>
+                            {s.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <button
+                      type="button"
+                      className="cs-btn-primary us-ai-apply-btn"
+                      disabled={isApplying || semesters.length === 0}
+                      onClick={handleApplyToSemester}
+                      id="apply-to-semester-btn"
+                    >
+                      {isApplying ? (
+                        <>
+                          <span className="spinner" /> Adding…
+                        </>
+                      ) : (
+                        'Add to Semester'
+                      )}
+                    </button>
+                  </div>
+
+                  {applyError && (
+                    <div className="alert alert-error us-alert" role="alert">
+                      <AlertCircleIcon />
+                      <span>{applyError}</span>
+                    </div>
+                  )}
+                  {applyMessage && (
+                    <div className="alert alert-success us-alert" role="status">
+                      <CheckCircleIcon />
+                      <span>{applyMessage}</span>
+                      <button
+                        type="button"
+                        className="cs-btn-ghost us-ai-manage-link"
+                        onClick={() => navigate('/subjects/manage')}
+                      >
+                        Manage subjects
+                      </button>
+                    </div>
+                  )}
+
+                  <p className="us-ai-meta">
+                    Analyzed with <strong>{analysis.model}</strong> ·{' '}
+                    {analysis.topics.length} topics detected
+                  </p>
+                </div>
+              )}
+            </div>
+
             <div className="us-result-actions">
               <button
                 className="cs-btn-primary"
@@ -343,6 +686,7 @@ export default function UploadSyllabus() {
                   setResultSyllabus(null);
                   setFile(null);
                   setSubject('');
+                  resetAiState();
                 }}
               >
                 Upload Another Syllabus

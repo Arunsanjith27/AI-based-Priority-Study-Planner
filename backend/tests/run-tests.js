@@ -1,12 +1,18 @@
+require('dotenv').config();
 const { test, before, after, beforeEach } = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const app = require('../src/app');
 const Student = require('../src/models/Student');
 const Syllabus = require('../src/models/Syllabus');
-const bcrypt = require('bcryptjs');
+
+// Used by the upload tests below, which now require authentication.
+process.env.JWT_SECRET =
+  process.env.JWT_SECRET || 'dev_aisp2_jwt_secret_key_change_in_production';
 
 let mongoServer;
 
@@ -15,6 +21,23 @@ const validStudent = {
   email: 'john.doe@example.com',
   password: 'Secure@123',
 };
+
+// Creates an authenticated student + JWT for the syllabus upload tests.
+// beforeEach wipes students, so each test gets a fresh one.
+async function createStudentAndToken(emailPrefix = 'upload') {
+  const email = `${emailPrefix}-${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2, 8)}@example.com`;
+  const student = await Student.create({
+    name: 'Syllabus Upload Student',
+    email,
+    password: 'Secure@123',
+  });
+  const token = jwt.sign({ id: student._id }, process.env.JWT_SECRET, {
+    expiresIn: '1h',
+  });
+  return { student, token };
+}
 
 before(async () => {
   const LOCAL_DB_URI = process.env.TEST_MONGODB_URI || 'mongodb://127.0.0.1:27017/ai-study-planner-test';
@@ -415,8 +438,10 @@ test('TEST 10 — Invalid registration: empty body -> no account created', async
 // ============================================================
 
 test('AISP-5 — Upload TXT syllabus successfully', async () => {
+  const { token } = await createStudentAndToken();
   const res = await request(app)
     .post('/api/syllabus/upload')
+    .set('Authorization', `Bearer ${token}`)
     .field('subject', 'Operating Systems')
     .attach(
       'syllabus',
@@ -444,8 +469,10 @@ test('AISP-5 — Upload TXT syllabus successfully', async () => {
 });
 
 test('AISP-5 — Reject upload when subject is missing', async () => {
+  const { token } = await createStudentAndToken();
   const res = await request(app)
     .post('/api/syllabus/upload')
+    .set('Authorization', `Bearer ${token}`)
     .attach(
       'syllabus',
       Buffer.from('Test syllabus content'),
@@ -461,8 +488,10 @@ test('AISP-5 — Reject upload when subject is missing', async () => {
 });
 
 test('AISP-5 — Reject upload when file is missing', async () => {
+  const { token } = await createStudentAndToken();
   const res = await request(app)
     .post('/api/syllabus/upload')
+    .set('Authorization', `Bearer ${token}`)
     .field('subject', 'Operating Systems');
 
   assert.equal(res.status, 400);
@@ -474,8 +503,10 @@ test('AISP-5 — Reject upload when file is missing', async () => {
 });
 
 test('AISP-5 — Reject unsupported file format', async () => {
+  const { token } = await createStudentAndToken();
   const res = await request(app)
     .post('/api/syllabus/upload')
+    .set('Authorization', `Bearer ${token}`)
     .field('subject', 'Operating Systems')
     .attach(
       'syllabus',
@@ -500,8 +531,10 @@ Unit 2: Process Management
 Unit 3: Memory Management
 `;
 
+  const { token } = await createStudentAndToken();
   const res = await request(app)
     .post('/api/syllabus/upload')
+    .set('Authorization', `Bearer ${token}`)
     .field('subject', 'Operating Systems')
     .attach(
       'syllabus',
@@ -518,8 +551,10 @@ Unit 3: Memory Management
 });
 
 test('AISP-6 — Associate extracted text with the correct subject', async () => {
+  const { token } = await createStudentAndToken();
   const res = await request(app)
     .post('/api/syllabus/upload')
+    .set('Authorization', `Bearer ${token}`)
     .field('subject', 'Database Management Systems')
     .attach(
       'syllabus',
@@ -541,8 +576,10 @@ test('AISP-6 — Associate extracted text with the correct subject', async () =>
 });
 
 test('AISP-6 — Reject syllabus with no readable text', async () => {
+  const { token } = await createStudentAndToken();
   const res = await request(app)
     .post('/api/syllabus/upload')
+    .set('Authorization', `Bearer ${token}`)
     .field('subject', 'Operating Systems')
     .attach(
       'syllabus',
@@ -559,8 +596,10 @@ test('AISP-6 — Reject syllabus with no readable text', async () => {
 });
 
 test('AISP-6 — Reject unsupported extraction type', async () => {
+  const { token } = await createStudentAndToken();
   const res = await request(app)
     .post('/api/syllabus/upload')
+    .set('Authorization', `Bearer ${token}`)
     .field('subject', 'Operating Systems')
     .attach(
       'syllabus',
